@@ -1,62 +1,37 @@
-from __future__ import print_function
+
 import numpy as np
-import tensorflow
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense, Activation
-from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
+from tensorflow.keras.datasets import mnist         # библиотека базы выборок Mnist
+from tensorflow import keras
+from tensorflow.keras.layers import Dense, Flatten, Dropout
 
-np.random.seed(1671)  # for reproducibility
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# network and training
-NB_EPOCH = 200
-BATCH_SIZE = 128
-VERBOSE = 2
-NB_CLASSES = 10   # number of outputs = number of digits
-OPTIMIZER = SGD() # SGD optimizer, explained later in this chapter
-N_HIDDEN = 128
-VALIDATION_SPLIT=0.2 # how much TRAIN is reserved for VALIDATION
+# стандартизация входных данных
+x_train = x_train / 255
+x_test = x_test / 255
 
-# data: shuffled and split between train and test sets
-#
-(X_train, y_train), (X_test, y_test) = mnist.load_data()
+y_train_cat = keras.utils.to_categorical(y_train, 10)
+y_test_cat = keras.utils.to_categorical(y_test, 10)
 
-#X_train is 60000 rows of 28x28 values --> reshaped in 60000 x 784
-RESHAPED = 784
-#
-X_train = X_train.reshape(60000, RESHAPED)
-X_test = X_test.reshape(10000, RESHAPED)
-X_train = X_train.astype('float32')
-X_test = X_test.astype('float32')
+model = keras.Sequential([
+    Flatten(input_shape=(28, 28, 1)),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
 
-# normalize 
-#
-X_train /= 255
-X_test /= 255
-print(X_train.shape[0], 'train samples')
-print(X_test.shape[0], 'test samples')
+print(model.summary())      # вывод структуры НС в консоль
 
-# convert class vectors to binary class matrices
-Y_train = to_categorical(y_train, NB_CLASSES)
-Y_test = to_categorical(y_test, NB_CLASSES)
+model.compile(optimizer='adam',
+             loss='categorical_crossentropy',
+             metrics=['accuracy'])
 
-# 10 outputs
-# final stage is softmax
 
-model = Sequential()
-model.add(Dense(NB_CLASSES, input_shape=(RESHAPED,)))
-model.add(Activation('softmax'))
+history = model.fit(x_train, y_train_cat, batch_size=128, epochs=50, validation_split=0.2)
 
-model.summary()
+model.evaluate(x_test, y_test_cat)
 
-model.compile(loss='categorical_crossentropy',
-              optimizer=OPTIMIZER,
-              metrics=['accuracy'])
-
-history = model.fit(X_train, Y_train,
-                    batch_size=BATCH_SIZE, epochs=NB_EPOCH,
-                    verbose=VERBOSE, validation_split=VALIDATION_SPLIT)
-score = model.evaluate(X_test, Y_test, verbose=VERBOSE)
-print("\nTest score:", score[0])
-print('Test accuracy:', score[1])
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.show()
