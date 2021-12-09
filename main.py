@@ -19,25 +19,26 @@ x_test = x_test / 255
 y_train_cat = keras.utils.to_categorical(y_train, 10)
 y_test_cat = keras.utils.to_categorical(y_test, 10)
 
-# x_train = np.expand_dims(x_train, axis=3)
-# x_test = np.expand_dims(x_test, axis=3)
+LeNet_x_train = np.expand_dims(x_train, axis=3)
+LeNet_x_test = np.expand_dims(x_test, axis=3)
 
 
 # инициализация структуры НС
 
-# model = keras.Sequential([
-#     Conv2D(6, kernel_size=(5, 5), strides=(1, 1), padding='same', activation='relu', input_shape=(28, 28, 1)),
-#     MaxPooling2D((2, 2), strides=(2, 2)),
-#     Conv2D(16, (5, 5), strides=(1, 1), padding='same', activation='relu'),
-#     MaxPooling2D((2, 2), strides=(2, 2)),
-#     Flatten(),
-#     Dense(120, activation='relu'),
-#     Dense(84, activation='linear'),
-#     # Dropout(0.5),
-#     Dense(10, activation='softmax')
-# ])
+LeNet5 = keras.Sequential([
+    Conv2D(6, kernel_size=(5, 5), strides=(1, 1), padding='same', activation='relu', input_shape=(28, 28, 1)),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    Conv2D(16, (5, 5), strides=(1, 1), padding='same', activation='relu'),
+    MaxPooling2D((2, 2), strides=(2, 2)),
+    Flatten(),
+    Dense(120, activation='relu'),
+    Dropout(0.4),
+    Dense(84, activation='linear'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
 
-model = keras.Sequential((
+LSTMRNN = keras.Sequential((
     InputLayer(input_shape=(28, 28)),
     LSTM(128),
     Dense(10, activation='softmax')
@@ -45,23 +46,45 @@ model = keras.Sequential((
 
 # вывод структуры НС в консоль
 
-print(model.summary())
+print(LeNet5.summary())
+print(LSTMRNN.summary())
 
-model.compile(optimizer='adam',
+LeNet5.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+LSTMRNN.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 # тестирование и вывод точности работы
 
-history = model.fit(x_train, y_train_cat, batch_size=256, epochs=50, verbose=1, validation_split=0.2)
+LSTMHistory = LSTMRNN.fit(x_train, y_train_cat, batch_size=128, epochs=25, verbose=1, validation_split=0.2)
+LeNetHistory = LeNet5.fit(LeNet_x_train, y_train_cat, batch_size=128, epochs=25, verbose=1, validation_split=0.2)
 
-score = model.evaluate(x_test, y_test_cat, verbose=1)
+LSTMScore = LSTMRNN.evaluate(x_test, y_test_cat, verbose=1)
+LeNetScore = LeNet5.evaluate(LeNet_x_test, y_test_cat, verbose=1)
 
-print('Потери при тестировании: ', score[0])
-print('Точность при тестировании:', score[1])
+
+print('Потери при тестировании LeNet-5: ', LeNetScore[0])
+print('Точность при тестировании LeNet-5:', LeNetScore[1])
+
+print('Потери при тестировании LSTM: ', LSTMScore[0])
+print('Точность при тестировании LSTM:', LSTMScore[1])
 
 # построение графика потерь для анализа переобучения
 
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
+
+plt.plot(LeNetHistory.history['loss'])
+plt.plot(LeNetHistory.history['val_loss'])
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Loss per epoch')
+plt.show()
+
+plt.plot(LeNetHistory.history['accuracy'])
+plt.plot(LSTMHistory.history['accuracy'])
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Accuracy per epoch')
 plt.show()
