@@ -27,13 +27,3 @@ I've got 99.2% accuracy on test set using CNN and 97% accuracy using LSTM.
 
 Overall, CNN's are of course preferred regarding image classification, but LSTM also performed well on this dataset.
 It was my first step in deep learning and I'm supposed to go further.
-
-## Installation:
-### 1. Clone the repo
-    git clone https://github.com/ddzina/drums-classification.git
-
-### 2. Create Anaconda virtual environment:
-
-    conda create --name env --file requirements.txt
-
-Put your name of environment after flag "--name". Created environment will include all the requirement dependencies.
